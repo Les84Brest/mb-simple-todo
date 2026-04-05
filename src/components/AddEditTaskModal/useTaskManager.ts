@@ -10,7 +10,8 @@ type Action =
     | { type: "SET_TASK_NAME"; payload: string }
     | { type: "ADD_TODO"; payload: ToDo }
     | { type: "UPDATE_TODO"; payload: { task: ToDo } }
-    | { type: "DELETE_TODO"; payload: number };
+    | { type: "DELETE_TODO"; payload: { taskId: string } }
+    | { type: "CLEAR_STORE" };
 
 const initialState: State = {
     taskName: "",
@@ -18,8 +19,10 @@ const initialState: State = {
 };
 
 const reducer = (state: State, action: Action): State => {
-  console.log('%cstate', 'padding: 5px; background: DarkKhaki; color: Yellow;', state);
+    console.log("%cstate", "padding: 5px; background: DarkKhaki; color: Yellow;", state);
     switch (action.type) {
+        case "CLEAR_STORE":
+            return { ...initialState };
         case "SET_TASK_NAME":
             return { ...state, taskName: action.payload };
         case "ADD_TODO":
@@ -32,8 +35,9 @@ const reducer = (state: State, action: Action): State => {
         case "DELETE_TODO":
             return {
                 ...state,
-                todos: state.todos.filter((_, index) => index !== action.payload),
+                todos: state.todos.filter((todo) => todo.id !== action.payload.taskId),
             };
+
         default:
             return state;
     }
@@ -55,8 +59,12 @@ const useTaskManager = () => {
         dispatch({ type: "UPDATE_TODO", payload: { task } });
     };
 
-    const deleteTodo = (index: number) => {
-        dispatch({ type: "DELETE_TODO", payload: index });
+    const deleteTodo = (index: string) => {
+        dispatch({ type: "DELETE_TODO", payload: { taskId: index } });
+    };
+
+    const clearStore = () => {
+        dispatch({ type: "CLEAR_STORE" });
     };
 
     return {
@@ -66,6 +74,7 @@ const useTaskManager = () => {
         addTodo,
         updateTodo,
         deleteTodo,
+        clearStore,
     };
 };
 

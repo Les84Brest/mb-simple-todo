@@ -1,4 +1,5 @@
-import { FC, ChangeEvent, useState } from "react";
+import { FC, ChangeEvent, useState, useRef, useEffect } from "react";
+
 import Dialog from '@mui/material/Dialog';
 import { useAppSelector, useAppDispatch } from "../../hooks/redux";
 import { selectModalData } from "../../store/selectors";
@@ -22,7 +23,8 @@ import useTaskManager from "./useTaskManager";
 import { Close } from "@mui/icons-material";
 import TodoTextModal from "./TodoTextModal";
 import uuid from "react-uuid";
-import { ToDo } from "../../types/types";
+import { ITask, ToDo } from "../../types/types";
+import { addTask } from "../../store/taskToDoSlice/taskToDoSlice";
 
 export const EDIT_TASK_MODAL = "addEditTaskModal";
 
@@ -35,6 +37,13 @@ export const AddEditTaskModal: FC = () => {
 
     const [addNewVisible, setAddNewVisible] = useState(false);
     const [newTitle, setNewTitle] = useState<string>('');
+    const newTodoRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (addNewVisible && newTodoRef.current) {
+            newTodoRef.current.focus();
+        }
+    }, [addNewVisible])
 
     const modalData = useAppSelector(selectModalData);
     const dispatch = useAppDispatch();
@@ -47,15 +56,26 @@ export const AddEditTaskModal: FC = () => {
         todos,
         setTaskName,
         updateTodo,
-        addTodo
+        addTodo,
+        clearStore
     } = useTaskManager();
 
     const handleCloseModal = () => {
         dispatch(closeModal({ modalId: EDIT_TASK_MODAL }));
+        clearStore();
     }
 
     const handleSave = () => {
+
+        const task: ITask = {
+            id: uuid(),
+            taskName,
+            todos
+        }
+
+        dispatch(addTask(task));
         dispatch(closeModal({ modalId: EDIT_TASK_MODAL }));
+        clearStore();
     }
 
     const handleSetTaskName = (event: ChangeEvent<HTMLInputElement>) => {
@@ -89,7 +109,7 @@ export const AddEditTaskModal: FC = () => {
             title,
             completed: false
         }
-        
+
         updateTodo(updatedTodo);
     }
 
@@ -108,7 +128,9 @@ export const AddEditTaskModal: FC = () => {
                     value={newTitle}
                     onChange={handleNewTitleChange}
                     variant="standard"
-                    label="Todo title" />
+                    label="Todo title"
+                    inputRef={newTodoRef}
+                />
                 <IconButton
                     aria-label="save"
                     size="small"
@@ -132,7 +154,7 @@ export const AddEditTaskModal: FC = () => {
                         <CheckCircleOutlineIcon />
                     </ListItemIcon>
                     <TodoTextModal
-                    id={todo.id}
+                        id={todo.id}
                         text={todo.title}
                         onSave={cbUpdateModalTodo}
                     />
@@ -187,7 +209,7 @@ export const AddEditTaskModal: FC = () => {
                 <Button autoFocus onClick={handleCloseModal}>
                     Cancel
                 </Button>
-                <Button onClick={handleSave}>Save</Button>
+                <Button onClick={handleSave} disabled={taskName === ''}>Save</Button>
             </DialogActions>
         </Dialog>
     )

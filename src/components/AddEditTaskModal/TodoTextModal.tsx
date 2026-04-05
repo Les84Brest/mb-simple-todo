@@ -44,7 +44,9 @@ export const TodoTextModal: FC<TodoTextModalProps> = ({ text, onSave, id }) => {
                             <SaveIcon />
                         </IconButton>
                     </Box>
+                    
                 </div>
+
                 : <Typography variant="subtitle1">{text}</Typography>}
 
 
